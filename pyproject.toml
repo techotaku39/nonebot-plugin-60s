@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "nonebot-plugin-60s"
+version = "0.1.1"
+description = "每天60秒读懂世界"
+authors = ["Ananovo <techotaku39@outlook.com>"]
+readme = "README.md"
+packages = [{include = "nonebot_plugin_60s"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
