@@ -20,6 +20,15 @@ _✨ 每天60秒读懂世界 ✨_
 
 </div>
 
+## 📖 介绍
+
+<details>
+  <summary>效果图</summary>
+
+![example](https://raw.githubusercontent.com/techotaku39/nonebot-plugin-60s/master/readme/example.jpg)
+
+</details>
+
 ## 💿 安装
 
 <details>
