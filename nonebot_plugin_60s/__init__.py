@@ -14,7 +14,7 @@ try:
 except ModuleNotFoundError:
     import json
 
-__help_version__ = '0.1.7'
+__help_version__ = '0.1.8'
 __help_plugin_name__ = "60s"
 __usage__ = """每天60秒读懂世界
 

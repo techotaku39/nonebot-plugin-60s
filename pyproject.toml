@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-60s"
-version = "0.1.7"
+version = "0.1.8"
 description = "每天60秒读懂世界"
 authors = ["Ananovo <techotaku39@outlook.com>"]
 readme = "README.md"
@@ -10,7 +10,7 @@ packages = [{include = "nonebot_plugin_60s"}]
 python = "^3.8"
 nonebot2 = "^2.0.0b2"
 nonebot-adapter-onebot = "^2.0.0b1"
-nonebot-plugin-apscheduler = "^0.1.2"
+nonebot-plugin-apscheduler = "^0.2.0"
 httpx = "^0.23.0"
 
 [build-system]
