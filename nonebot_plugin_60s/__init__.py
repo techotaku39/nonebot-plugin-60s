@@ -4,7 +4,7 @@ from pathlib import Path
 import httpx
 from nonebot import get_bot, get_driver, logger, on_command, require
 from nonebot.adapters import Message
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment, MessageEvent
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, CommandArg
 from nonebot.typing import T_State
@@ -92,9 +92,9 @@ moyu_matcher = on_command("读懂世界", aliases={"60s"})
 
 @moyu_matcher.handle()
 async def moyu(
-    event: GroupMessageEvent, matcher: Matcher, args: Message = CommandArg()
+    event: MessageEvent, matcher: Matcher, args: Message = CommandArg()
 ):
-    if cmdarg := args.extract_plain_text():
+    if isinstance(event, GroupMessageEvent) and (cmdarg := args.extract_plain_text()):
         if "状态" in cmdarg:
             push_state = scheduler.get_job(f"moyu_calendar_{event.group_id}")
             moyu_state = "60s日历状态：\n每日推送: " + ("已开启" if push_state else "已关闭")
