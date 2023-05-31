@@ -22,7 +22,7 @@ try:
 except ModuleNotFoundError:
     import json
 
-__help_version__ = '0.1.9'
+__help_version__ = '0.2.0'
 __help_plugin_name__ = "60s"
 __usage__ = """每天60秒读懂世界
 
