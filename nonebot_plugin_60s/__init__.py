@@ -1,4 +1,9 @@
+from nonebot_plugin_apscheduler import scheduler
+import asyncio
+import aiohttp
+import json
 import re
+import nonebot
 from pathlib import Path
 
 import httpx
@@ -8,6 +13,9 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment, Messa
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, CommandArg
 from nonebot.typing import T_State
+
+from .config import Config
+
 
 try:
     import ujson as json
@@ -26,18 +34,66 @@ __usage__ = """每天60秒读懂世界
 
 require("nonebot_plugin_apscheduler")
 
-from nonebot_plugin_apscheduler import scheduler
 
 subscribe = Path(__file__).parent / "subscribe.json"
 
-subscribe_list = json.loads(subscribe.read_text("utf-8")) if subscribe.is_file() else {}
+subscribe_list = json.loads(subscribe.read_text(
+    "utf-8")) if subscribe.is_file() else {}
 
 
 def save_subscribe():
     subscribe.write_text(json.dumps(subscribe_list), encoding="utf-8")
 
 
+# 加载全局配置
+global_config = nonebot.get_driver().config
+calendar = Config.parse_obj(global_config.dict())
+wechat_oa_cookie = calendar.calendar_cookie
+wechat_oa_token = calendar.calendar_token
+
+
 driver = get_driver()
+
+
+async def get_calendar_url(cookie: str, token: str) -> str:
+    async with aiohttp.ClientSession() as session:
+        headers = {
+            "Cookie": cookie,
+            "User-Agent": 'Mozilla/5.0 (Linux; Android 10; YAL-AL00 Build/HUAWEIYAL-AL00) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/70.0.3538.64 HuaweiBrowser/10.0.1.335 Mobile Safari/537.36'
+        }
+
+        ID = '每日60s简报'  # 公众号的名字
+        search_url = f'https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&begin=0&count=5&query={ID}&token={token}&lang=zh_CN&f=json&ajax=1'
+        # 发起搜索公众号请求
+        async with session.get(search_url, headers=headers) as response:
+            doc = await response.text()
+        jstext = json.loads(doc)
+        fakeid = jstext['list'][0]['fakeid']
+
+        data = {
+            "token": token,
+            "lang": "zh_CN",
+            "f": "json",
+            "ajax": "1",
+            "action": "list_ex",
+            "begin": 0,
+            "count": "5",
+            "query": "",
+            "fakeid": fakeid,
+            "type": "9",
+        }
+        url = "https://mp.weixin.qq.com/cgi-bin/appmsg"
+        # 发起获取文章列表的请求
+        async with session.get(url, headers=headers, params=data) as response:
+            json_test = await response.text()
+        json_test = json.loads(json_test)
+        page = json_test["app_msg_list"]
+        page = page[0]['link']
+        # 根据文章链接获取页面内容
+        async with session.get(page) as response:
+            html = await response.text()
+        cdn_url = re.findall(r"cdn_url:\s*'([^']*)'", html)
+        return cdn_url[0]
 
 
 async def get_calendar() -> bytes:
@@ -66,7 +122,11 @@ async def subscribe_jobs():
 
 async def push_calendar(group_id: str):
     bot = get_bot()
-    moyu_img = await get_calendar()
+    try:
+        moyu_img = await get_calendar()
+    except ValueError:
+        moyu_img = await get_calendar_url(wechat_oa_cookie, wechat_oa_token)
+
     await bot.send_group_msg(
         group_id=int(group_id), message=MessageSegment.image(moyu_img)
     )
@@ -115,7 +175,10 @@ async def moyu(
         else:
             await matcher.finish("60s日历的参数不正确")
     else:
-        moyu_img = await get_calendar()
+        try:
+            moyu_img = await get_calendar()
+        except ValueError:
+            moyu_img = await get_calendar_url(wechat_oa_cookie, wechat_oa_token)
         await matcher.finish(MessageSegment.image(moyu_img))
 
 
